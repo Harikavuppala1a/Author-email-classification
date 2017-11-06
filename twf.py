@@ -51,6 +51,23 @@ def make_featurevector(inputdata, classid,worddictionary,dics):
                 temp = map(str,temp) 
                 return temp, classid
 
+def getvar(X_training, X_testing):
+                     res = []
+                     for j in range(len(X_training[0])):
+                        col=[]
+                        for i in range(len(X_training)):
+                           col.append(X_training[i][j])
+                        res1 = Counter(col)  
+                        if '0' in res1:
+                          #print "gggggGG"
+                          re = res1['0']
+                          #print re
+                        if re > 445:
+                              res.append(j)
+                     X_trainingdata = np.delete(X_training,[res], axis=1) 
+                     X_testingdata = np.delete(X_testing,[res], axis=1) 
+                     return X_trainingdata, X_testingdata
+
 
 def testfeat(uni,dics):
   
@@ -59,12 +76,15 @@ def testfeat(uni,dics):
   X_testing = []
   Y_testing = []
   countertest =Counter() 
+  i = 0
   for fol in inputdir:
+      print fol
       classid = -1
       for c in raw_path:
             classid =classid+1
-            for dirpath, dirs, files in os.walk("maindatabase/"+fol+c):
+            for dirpath, dirs, files in os.walk("maindatabase12/"+fol+c):
                             for filename in fnmatch.filter(files, '*'):
+                                      
                                       with open(os.path.join(dirpath, filename)) as f:
                                                emaildata =f.read()
                                                email = Parser().parsestr(emaildata)
@@ -75,20 +95,19 @@ def testfeat(uni,dics):
                                                if fol == 'train/':
                                                #print countertest                  
                                                       X_train,Y_train= make_featurevector(countertest,classid,uni,dics)
-                                                      X_train = sorted(X_train, key=float, reverse=True)
-                                                      X_trained = X_train[:1000]
-                                                      X_training.append(X_trained)
+                                                      X_training.append(X_train)
                                                       Y_training.append(Y_train)
+                                                     # print i
                                                else:
                                                       X_test,Y_test= make_featurevector(countertest,classid,uni,dics)
-                                                      X_test = sorted(X_test, key=float, reverse=True)
-                                                      X_tested = X_test[:1000]
-                                                      X_training.append(X_tested)
+                                                      X_testing.append(X_test)
                                                       Y_testing.append(Y_test)
 
   #print len(Y_testing), len(X_testing)
-  #print len(Y_training), len(X_training)
-  return X_training, Y_training, X_testing, Y_testing
+  print len(X_training[0])
+  X_trainingdata, X_testingdata = getvar(X_training, X_testing)
+  print len(X_trainingdata[0])
+  return X_trainingdata, Y_training, X_testingdata, Y_testing
 
 
 
@@ -112,7 +131,7 @@ def preunique(unidata):
 def getuni():
  dicti={}
  counter = Counter()
- for dirpath, dirs, files in os.walk("maindatabase/"+inputdir[0]):
+ for dirpath, dirs, files in os.walk("maindatabase12/"+inputdir[0]):
     
     for filename in fnmatch.filter(files, '*'):
        
@@ -130,7 +149,7 @@ def getuni():
                              dicti[datas] = 1
                                                  
             counter.update(filtered)
- counter = Counter({k: c for k, c in counter.iteritems()})
+ #counter = Counter({k: c for k, c in counter.iteritems() if ((c > 700) & (c<8000))})
            # counter.update(filtered_body)
  
  return counter,dicti
