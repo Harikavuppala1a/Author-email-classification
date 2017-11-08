@@ -49,7 +49,7 @@ def make_featurevector(inputdata, classid,worddictionary,dics):
                 temp = map(str,temp) 
                 return temp, classid
 
-def getvar(X_training, X_testing):
+def getnorm(X_training, X_testing):
                      res = []
                      for j in range(len(X_training[0])):
                         col=[]
@@ -81,7 +81,7 @@ def testfeat(uni,dics):
       classid = -1
       for c in raw_path:
             classid =classid+1
-            for dirpath, dirs, files in os.walk("maindatabase12/"+fol+c):
+            for dirpath, dirs, files in os.walk("maindatabase/"+fol+c):
                             for filename in fnmatch.filter(files, '*'):
                                       with open(os.path.join(dirpath, filename)) as f:
                                                emaildata =f.read()
@@ -102,7 +102,7 @@ def testfeat(uni,dics):
 
 
   print len(X_training[0]), len(X_testing[0])
-  X_trainingdata, X_testingdata = getvar(X_training, X_testing)
+  X_trainingdata, X_testingdata = getnorm(X_training, X_testing)
   print len(X_trainingdata[0]), len(X_testingdata[0])
 
   #print len(Y_testing), len(X_testing)
@@ -131,7 +131,7 @@ def preunique(unidata):
 def getuni():
  dicti={}
  counter = Counter()
- for dirpath, dirs, files in os.walk("maindatabase12/"+inputdir[0]):
+ for dirpath, dirs, files in os.walk("maindatabase/"+inputdir[0]):
     
     for filename in fnmatch.filter(files, '*'):
        
