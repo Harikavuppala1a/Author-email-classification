@@ -9,6 +9,9 @@ import os
 import pandas as pd
 import  email
 import re
+from nltk import tokenize
+import string
+from collections import Counter
 
 os.chdir('/home/prudhvi/Documents')
 
@@ -53,6 +56,9 @@ emails['To'] = emails['To'].map(split_email_addresses)
 emails['user'] = emails['file'].map(lambda x:x.split('/')[0])
 del messages
 
+
+
+
 emails['email_length'] = emails.apply(lambda x : len(x['content']) , axis = 1)
 
 emails['digits_count'] = emails.apply(lambda x : sum(c.isdigit() for c in x['content']) , axis = 1)
@@ -73,6 +79,41 @@ def avg_word_length(row):
     return avg
 
 emails['avg_word_length'] = emails.apply(lambda x : avg_word_length(x) ,axis = 1)
+
+def avg_sent_length(row) :
+    sents = tokenize.sent_tokenize(row['content'])
+    lengths_of_sents = [len(k) for k in sents]
+    avg_length = sum(lengths_of_sents) / len(sents)
+    return  avg_length
+
+
+emails['avg_sentence_length'] = emails.apply(lambda x : avg_sent_length(x) ,axis = 1)
+
+
+
+
+# normalising all with length of email
+
+emails['digits_count']  = emails['digits_count'] / emails['email_length']
+
+
+emails['spaces_count']  = emails['spaces_count'] /emails['email_length']
+
+emails['word_count'] = emails['word_count'] /emails['email_length']
+
+special_chars = string.punctuation
+
+
+emails['spl_char_count'] = emails.apply(lambda  x : sum(v for k, v in Counter(x['content']).items() if k in special_chars) , axis = 1)
+
+emails['spl_char_count'] = emails['spl_char_count'] / emails['email_length']
+
+emails['paras_count'] = emails.apply(lambda x : x['content'].count('\n\n') + 1 ,axis = 1)
+
+emails['avg_sentences_in_para'] = emails.apply(lambda x :len(re.findall(r'\.',x['content']))/x['paras_count'],axis = 1)
+
+
+
 
 
 
