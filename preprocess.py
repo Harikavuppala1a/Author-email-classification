@@ -12,6 +12,9 @@ import re
 from nltk import tokenize
 import string
 from collections import Counter
+from nltk.corpus import stopwords
+stops = stopwords.words('english')
+import nltk
 
 os.chdir('/home/prudhvi/Documents')
 
@@ -55,8 +58,6 @@ emails['To'] = emails['To'].map(split_email_addresses)
 # Extract the root of 'file' as 'user'
 emails['user'] = emails['file'].map(lambda x:x.split('/')[0])
 del messages
-
-
 
 
 emails['email_length'] = emails.apply(lambda x : len(x['content']) , axis = 1)
@@ -112,7 +113,7 @@ emails['paras_count'] = emails.apply(lambda x : x['content'].count('\n\n') + 1 ,
 
 emails['avg_sentences_in_para'] = emails.apply(lambda x :len(re.findall(r'\.',x['content']))/x['paras_count'],axis = 1)
 
-
+emails['len_of_fun_words'] = emails.apply(lambda x :len([i for i in word_tokenize(x['content'].lower()) if i in stops])/x['word_count'],axis = 1)
 
 
 
