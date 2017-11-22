@@ -15,6 +15,7 @@ from collections import Counter
 from nltk.corpus import stopwords
 stops = stopwords.words('english')
 import nltk
+from nltk import word_tokenize
 
 os.chdir('/home/prudhvi/Documents')
 
@@ -25,12 +26,16 @@ print(emails['message'][0])
 emails.head()
 
 ## Helper functions
+
+'''To get the content from email objects'''
+
 def get_text_from_email(msg):
-    '''To get the content from email objects'''
+
     parts = []
     for part in msg.walk():
         if part.get_content_type() == 'text/plain':
             parts.append( part.get_payload() )
+
     return ''.join(parts)
 
 def split_email_addresses(line):
@@ -91,8 +96,6 @@ def avg_sent_length(row) :
 emails['avg_sentence_length'] = emails.apply(lambda x : avg_sent_length(x) ,axis = 1)
 
 
-
-
 # normalising all with length of email
 
 emails['digits_count']  = emails['digits_count'] / emails['email_length']
@@ -113,9 +116,25 @@ emails['paras_count'] = emails.apply(lambda x : x['content'].count('\n\n') + 1 ,
 
 emails['avg_sentences_in_para'] = emails.apply(lambda x :len(re.findall(r'\.',x['content']))/x['paras_count'],axis = 1)
 
-emails['len_of_fun_words'] = emails.apply(lambda x :len([i for i in word_tokenize(x['content'].lower()) if i in stops])/x['word_count'],axis = 1)
 
 
 
+def ratio_fun_words(row) :
+    count = len([i for i in word_tokenize(row['content'].lower()) if i in stops])
+    try :
+        count = count/(row['word_count']*row['email_length'])
+    except :
+        count = 0
+
+    return  count
+
+
+
+emails['ratio_of_fun_words'] = emails.apply(lambda x : ratio_fun_words(x),axis = 1)
+
+list_of_test_authors = ['beck-s','farmer-d','kaminski-v','kitchen-l','lokay-m','sanders-r','williams-w3' ]
+
+
+emails_sample = emails[emails['user'].isin(list_of_test_authors)]
 
 
