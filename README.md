@@ -23,7 +23,7 @@ Both the folders have all these files. In sub+body we are extracting the context
 
 -tfnorm.py : It gives weight to each feature based on number of times the word occur in the emails by doing normalization.
 
-– twf.py : The term weight filtering (TWF), which is a simple method in which features are ranked according to their weight, which is usually the TF of TF-IDF.
+–twf.py : The term weight filtering (TWF), which is a simple method in which features are ranked according to their weight, which is usually the TF of TF-IDF.
 
 – df.py : The document frequency (DF) method based on the Information Retrieval scoring scheme, ranks features according to the number of different documents where the feature occurs.
 
@@ -33,7 +33,7 @@ Both the folders have all these files. In sub+body we are extracting the context
 
 – l0norm.py : The L0 -norm works by computing the rank of the remaining features. 
 
-- fisher.py : The Fisher criterion (FC) is used in Fisher’s linear discriminant and applied to FS as a method that tries to evaluate how much a feature can discriminate between two classes. The result of the computation is a matrix of pairs of class-feature. An analysis on this matrix must be done in order to determine the scalar value of the feature. 
+–fisher.py : The Fisher criterion (FC) is used in Fisher’s linear discriminant and applied to FS as a method that tries to evaluate how much a feature can discriminate between two classes. The result of the computation is a matrix of pairs of class-feature. An analysis on this matrix must be done in order to determine the scalar value of the feature. 
 
 After doing feature weighting and feature selection we are classifying the emails with Support Vector Machines, Maximum entropy and Naive Bayes.
  
