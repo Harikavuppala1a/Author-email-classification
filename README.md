@@ -7,7 +7,10 @@ Stylometric.py:
 Run: Python stylometric.py
  After running this file we get a feature vector for each email which contains information about sylometric features.
  The features extracted here are: Email length in characters, Digit density, Ratio of space to email length, Each special character count, Document length in words, Average length of words, Average sentence length, Number of paragraphs in documents, Number of sentences in paragraphs,Frequencies of function words. 
- 
+
+RNN:
+This folder contains code for training an LSTM based classifier. 
+
 There are two folders here: sub+body and sub+body+participants
 Both the folders have all these files. In sub+body we are extracting the context specific features only from the subject and body part of an email. In sub+body+participants we are extracting the context specific features from the subject, body, participants (cc,bcc,to) from an email. After extracting the features we are giving some weight to the features and then select the important features.
   
