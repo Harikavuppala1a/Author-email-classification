@@ -9,7 +9,6 @@ import fnmatch
 import os, errno
 import re
 import sys
-import math
 from collections import Counter
 from email.parser import Parser
 from nltk.corpus import stopwords
@@ -18,12 +17,9 @@ from sklearn.model_selection import StratifiedShuffleSplit
 from sklearn.naive_bayes import GaussianNB
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import confusion_matrix
-from sklearn.linear_model import LogisticRegression
 from sklearn.svm import SVC
-from nltk import PorterStemmer
-import numpy as np
+from sklearn.linear_model import LogisticRegression
 
-PS = PorterStemmer()
 punctuation='!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~'
 removepunctuation = dict((ord(char), 32) for char in punctuation)
 datadir = 'database/'
@@ -41,7 +37,7 @@ def make_featurevector(inputdata, classid,worddictionary):
                            wordT = uniword[k].strip()
                            if wordT in inputdata:
                              #print "if"
-                             Countwords = inputdata[wordT]
+                             Countwords = 1
                            else:
                              Countwords = 0
                            temp.append(Countwords)                  
@@ -50,32 +46,6 @@ def make_featurevector(inputdata, classid,worddictionary):
                 temp = map(str,temp) 
                 return temp, classid
 
-def getvar(X_training, X_testing):
-                     res = []
-                     for j in range(len(X_training[0])):
-                        col=[]
-                        for i in range(len(X_training)):
-                           col.append(X_training[i][j])
-                        col = np.array(col).astype(np.float)  
-                        pA = col / col.sum() 
-                        val = (-pA)*np.log2(pA) 
-                        res1 = 0
-                        #print len(val)
-                        for i in range(len(val)):
-                         if math.isnan(float(val[i])):
-                            pass
-                         else:
-                          #print "h"
-                          res1 = res1 +val[i] 
-                        #print res1
-                        #res1 = np.var(col)
-                        if res1 < 0.5:
-                              
-                              res.append(j)
-                     #print res
-                     X_trainingdata = np.delete(X_training,[res], axis=1) 
-                     X_testingdata = np.delete(X_testing,[res], axis=1) 
-                     return X_trainingdata, X_testingdata
 
 def testfeat(uni):
   
@@ -100,30 +70,20 @@ def testfeat(uni):
                                                if fol == 'train/':
                                                #print countertest                  
                                                       X_train,Y_train= make_featurevector(countertest,classid,uni)
-                                                      
                                                       X_training.append(X_train)
                                                       Y_training.append(Y_train)
                                                else:
                                                       X_test,Y_test= make_featurevector(countertest,classid,uni)
-                                                      
                                                       X_testing.append(X_test)
                                                       Y_testing.append(Y_test)
 
-
-  ###Feature Selection variance method##
-  print len(X_training[0]), len(X_testing[0])
-  X_trainingdata, X_testingdata = getvar(X_training, X_testing)
-  print len(X_trainingdata[0]), len(X_testingdata[0])
-    
-   
-  
-  
-  return X_trainingdata, Y_training, X_testingdata, Y_testing
+  #print len(Y_testing), len(X_testing)
+  #print len(Y_training), len(X_training)
+  return X_training, Y_training, X_testing, Y_testing
 
 
 
 def preunique(unidata):
-         filtereddata1 = []
          stop_words = set(stopwords.words('english'))
          if unidata:
 
@@ -134,11 +94,10 @@ def preunique(unidata):
              subj1 = re.sub(r'\w*[0-9]\w*', '', subj1)
              subj=[e.lower() for e in map(string.strip, re.split("(\W+)", subj1)) if len(e) > 0 and not re.match("\W",e)]
              filtereddata = [w for w in subj if not w in stop_words and not w.isdigit()]
-             for tokens in filtereddata:
-                       toens=PS.stem(tokens)
-                       filtereddata1.append(tokens)
-                 
-         return filtereddata1
+         else:
+             filtereddata=[]
+         
+         return filtereddata
 def getuni():
 
  counter = Counter()
@@ -153,16 +112,16 @@ def getuni():
             filtered_body = preunique(email.get_payload())
             filtered = filtered_subj + filtered_body
             counter.update(filtered)
- #counter = Counter({k: c for k, c in counter.iteritems()if((c>500)& (c<8000))})
+ counter = Counter({k: c for k, c in counter.iteritems() if ((c > 700) & (c<8000))})
            # counter.update(filtered_body)
  
  return counter 
 
 def folderdata():
-    
-   
+    ylabel = []
+    z = -1
     for c in raw_path:
-        
+        z =z +1
         i = 0
         try:
            os.makedirs(dest+c)
@@ -173,12 +132,12 @@ def folderdata():
 
              for filename in fnmatch.filter(files, '*.'):
                   i = i + 1
-                  
+                  ylabel.append(z)
                   filenames = os.path.join(dirpath, filename)
                   filed = str(i)
                   shutil.copy2(filenames, dest+c+filed)
 
-   
+    return ylabel
 
 
 def splitdata():
@@ -218,12 +177,12 @@ def calculate_accuracy(predictions, labels):
 if __name__ == "__main__":
 
  # preprocessing of folders
-# folderdata()
- #splitdata()
+ folderdata()
+ splitdata()
 ##get unique words
  uni = getuni()
  #print uni
- #print len(uni)
+ print len(uni)
 ##getting  featue vectors
  X_traindt, Y_traindt, X_testdt, Y_testdt = testfeat(uni)
  X_traindt = np.array(X_traindt).astype(np.float)
@@ -236,7 +195,7 @@ if __name__ == "__main__":
  #y_pred=gnb.predict(X_testdt)
  
 ########SVM
-# svm
+ # svm
  #clf = svm.SVC()
  #clf.fit(xtrain, ytrain) 
 # y_pred=clf.predict(xtest) 
@@ -253,5 +212,4 @@ if __name__ == "__main__":
  print cm
  for i in range(len(cm)):
    val = float(cm[i][i])/float((cm[i][0]+cm[i][1]+cm[i][2]+cm[i][3]+cm[i][4]+cm[i][5]+cm[i][6]))
-   print val
-
+print val

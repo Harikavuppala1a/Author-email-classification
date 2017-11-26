@@ -9,6 +9,7 @@ import fnmatch
 import os, errno
 import re
 import sys
+import math
 from collections import Counter
 from email.parser import Parser
 from nltk.corpus import stopwords
@@ -18,8 +19,9 @@ from sklearn.naive_bayes import GaussianNB
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import confusion_matrix
 from sklearn.linear_model import LogisticRegression
-from sklearn.svm import SVC
+from sklearn import svm
 from nltk import PorterStemmer
+import numpy as np
 
 PS = PorterStemmer()
 punctuation='!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~'
@@ -27,9 +29,15 @@ removepunctuation = dict((ord(char), 32) for char in punctuation)
 datadir = 'database/'
 raw_path = ['kitchen-l/','farmer-d/','beck-s/','kaminski-v/','sanders-r/','lokay-m/', 'williams-w3/']
 dest ='predatabase/'
-dest1 = 'maindatabase/'
+dest1 = 'maindatabase12/'
 inputdir =['train/','test/']
+def part(email):
+ if email:
+  participants=[s.strip() for s in email.splitlines()]
 
+ else:
+  participants = []
+ return participants
 
 def make_featurevector(inputdata, classid,worddictionary):
                 temp = []
@@ -48,6 +56,21 @@ def make_featurevector(inputdata, classid,worddictionary):
                 temp = map(str,temp) 
                 return temp, classid
 
+def getvar(X_training, X_testing,Y_training,Y_testing):
+                     res = []
+                     unique, counts = np.unique(Y_testing, return_counts=True)
+                     print counts
+                     for j in range(len(X_training[0])):
+                        col=[]
+                        for i in range(len(X_training)):
+                           col.append(X_training[i][j])
+                        col = np.array(col).astype(np.float)  
+                        res1 = np.var(col)
+                        if res1 < 0.3:
+                              res.append(j)
+                     X_trainingdata = np.delete(X_training,[res], axis=1) 
+                     X_testingdata = np.delete(X_testing,[res], axis=1) 
+                     return X_trainingdata, X_testingdata
 
 def testfeat(uni):
   
@@ -60,7 +83,7 @@ def testfeat(uni):
       classid = -1
       for c in raw_path:
             classid =classid+1
-            for dirpath, dirs, files in os.walk("maindatabase/"+fol+c):
+            for dirpath, dirs, files in os.walk("maindatabase12/"+fol+c):
                             for filename in fnmatch.filter(files, '*'):
                                       with open(os.path.join(dirpath, filename)) as f:
                                                emaildata =f.read()
@@ -72,16 +95,34 @@ def testfeat(uni):
                                                if fol == 'train/':
                                                #print countertest                  
                                                       X_train,Y_train= make_featurevector(countertest,classid,uni)
+                                                      
                                                       X_training.append(X_train)
                                                       Y_training.append(Y_train)
                                                else:
                                                       X_test,Y_test= make_featurevector(countertest,classid,uni)
+                                                      
                                                       X_testing.append(X_test)
                                                       Y_testing.append(Y_test)
 
-  #print len(Y_testing), len(X_testing)
-  #print len(Y_training), len(X_training)
-  return X_training, Y_training, X_testing, Y_testing
+
+  ###Feature Selection variance method##
+  #print len(X_training[0])
+  print len(X_training[0]),len(X_testing[0])
+  X_trainingdata, X_testingdata = getvar(X_training, X_testing,Y_training,Y_testing)
+  print len(X_trainingdata[0]),len(X_testingdata[0])
+
+  
+  #print len(X_trainingdata[0])
+  #print len(X_testingdata[0])
+
+ # print res
+                  
+
+    
+   
+  
+  #print Y_training
+  return X_trainingdata, Y_training, X_testingdata, Y_testing
 
 
 
@@ -103,22 +144,36 @@ def preunique(unidata):
                  
          return filtereddata1
 def getuni():
-
+ i=0
  counter = Counter()
- for dirpath, dirs, files in os.walk("maindatabase/"+inputdir[0]):
+ for dirpath, dirs, files in os.walk("maindatabase12/"+inputdir[0]):
     
     for filename in fnmatch.filter(files, '*'):
        
         with open(os.path.join(dirpath, filename)) as f:
             emaildata =f.read()
-            email = Parser().parsestr(emaildata)
+            
+            email = Parser().parsestr(emaildata) 
+            
+            
             filtered_subj = preunique(email['subject'])
             filtered_body = preunique(email.get_payload())
-            filtered = filtered_subj + filtered_body
-            counter.update(filtered)
- counter = Counter({k: c for k, c in counter.iteritems() if ((c > 700) & (c<8000))})
+            cced=part(email['cc'])
+            toed=part(email['to'])
+            participant = cced+toed
+            
+            
+            if participant:
+             filtered = filtered_subj + filtered_body+ participant
+             #filtered=participant
+             counter.update(filtered)
+
+            else:
+              filtered = filtered_subj + filtered_body
+              counter.update(filtered)
+ #counter = Counter({k: c for k, c in counter.iteritems()if((c>500)& (c<8000))})
            # counter.update(filtered_body)
- 
+ #print counter
  return counter 
 
 def folderdata():
@@ -181,12 +236,13 @@ def calculate_accuracy(predictions, labels):
 if __name__ == "__main__":
 
  # preprocessing of folders
- folderdata()
- splitdata()
+ #folderdata()
+ #splitdata()
+ print 'completed'
 ##get unique words
  uni = getuni()
  #print uni
- print len(uni)
+ #print len(uni)
 ##getting  featue vectors
  X_traindt, Y_traindt, X_testdt, Y_testdt = testfeat(uni)
  X_traindt = np.array(X_traindt).astype(np.float)
@@ -201,8 +257,8 @@ if __name__ == "__main__":
 ########SVM
 # svm
  #clf = svm.SVC()
- #clf.fit(xtrain, ytrain) 
-# y_pred=clf.predict(xtest) 
+ #clf.fit(X_traindt,Y_traindt) 
+ #y_pred=clf.predict(X_testdt) 
 ###########LOGISTIC REGRESSION
  reg=LogisticRegression(multi_class='multinomial',solver ='newton-cg')
  reg.fit(X_traindt,Y_traindt)
@@ -217,4 +273,7 @@ if __name__ == "__main__":
  for i in range(len(cm)):
    val = float(cm[i][i])/float((cm[i][0]+cm[i][1]+cm[i][2]+cm[i][3]+cm[i][4]+cm[i][5]+cm[i][6]))
    print val
+ 
+ unique, counts = np.unique(Y_testdt, return_counts=True)
+ #print counts
 
